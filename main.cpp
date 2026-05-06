@@ -1,0 +1,55 @@
+#include "opencv2/opencv.hpp"
+#include <iostream>
+
+using namespace cv;
+using namespace std;
+
+// 전역 변수
+Mat src, dst;
+Point pt1; // 마우스를 처음 누른 지점
+
+void on_mouse(int event, int x, int y, int flags, void* userdata) {
+    if (event == EVENT_LBUTTONDOWN) {
+        // 1. 마우스 왼쪽 버튼을 누르면 시작점 저장
+        pt1 = Point(x, y);
+    }
+    else if (event == EVENT_LBUTTONUP) {
+        // 2. 마우스 버튼을 떼면 사각형 영역 설정
+        Rect selection(pt1, Point(x, y));
+
+        // 예외 처리: 마우스를 클릭만 하거나 영역이 없는 경우 방지
+        if (selection.width > 0 && selection.height > 0) {
+
+            // 3. 부분 행렬 추출 (내가 드래그한 영역만 가져오기)
+            Mat roi = dst(selection);
+
+            // 4. 해당 영역만 100만큼 밝게 만들기
+            // (saturate_cast가 자동으로 포함되어 안전하게 더해집니다)
+            roi += 100;
+
+            // 결과 보여주기
+            imshow("image", dst);
+        }
+    }
+}
+
+int main() {
+    src = imread("lenna.bmp", IMREAD_GRAYSCALE);
+
+    if (src.empty()) {
+        cerr << "이미지를 찾을 수 없습니다!" << endl;
+        return -1;
+    }
+
+    dst = src.clone(); // 원본 보존을 위해 복사본 사용
+    namedWindow("image");
+    setMouseCallback("image", on_mouse);
+
+    imshow("image", dst);
+
+    while (true) {
+        if (waitKey() == 'q') break;
+    }
+
+    return 0;
+}
