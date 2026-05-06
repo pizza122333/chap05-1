@@ -1,0 +1,53 @@
+#include "opencv2/opencv.hpp"
+#include <iostream>
+
+using namespace cv;
+using namespace std;
+
+// 전역 변수: 마우스 함수에서도 사진을 알아볼 수 있게 밖에 꺼내놓아요.
+Mat src, dst;
+int brightness = 0; // 현재 밝기 변화량 저장
+
+void on_mouse(int event, int x, int y, int flags, void* userdata) {
+    // 왼쪽 마우스 클릭: 밝기 +10
+    if (event == EVENT_LBUTTONDOWN) {
+        brightness += 10;
+    }
+    // 오른쪽 마우스 클릭: 밝기 -10
+    else if (event == EVENT_RBUTTONDOWN) {
+        brightness -= 10;
+    }
+    else {
+        return; // 클릭이 아니면 아무것도 안 함
+    }
+
+    // 밝기 계산 (saturate_cast를 써야 숫자가 0~255 사이로 안전하게 고정돼요!)
+    dst = src + brightness;
+
+    // 바뀐 결과 보여주기
+    imshow("image", dst);
+    cout << "현재 밝기 변화량: " << brightness << endl;
+}
+
+int main() {
+    // 1. 레나 영상 읽기
+    src = imread("lenna.bmp", IMREAD_GRAYSCALE);
+
+    if (src.empty()) {
+        cerr << "사진을 찾을 수 없어요!" << endl;
+        return -1;
+    }
+
+    dst = src.clone(); // 처음엔 원본과 똑같이 시작
+
+    // 2. 창을 만들고 마우스 감시자(콜백) 설정하기
+    namedWindow("image");
+    setMouseCallback("image", on_mouse);
+
+    // 3. 처음 상태 보여주기
+    imshow("image", dst);
+
+    // 4. 키보드 아무 키나 누르면 프로그램 종료
+    waitKey();
+    return 0;
+}
