@@ -1,0 +1,60 @@
+#include "opencv2/opencv.hpp"
+#include <iostream>
+
+using namespace cv;
+using namespace std;
+
+// 전역 변수들
+Mat src, dst;
+int mode = 0; // 0이면 증가, 1이면 감소 (트랙바가 이 값을 바꿔줄 거예요)
+
+// 마우스 클릭 시 실행되는 함수
+void on_mouse(int event, int x, int y, int flags, void* userdata) {
+    if (event == EVENT_LBUTTONDOWN) {
+        if (mode == 0) {
+            // 트랙바가 0일 때: 밝기 10 증가
+            dst += 10;
+        }
+        else if (mode == 1) {
+            // 트랙바가 1일 때: 밝기 10 감소
+            dst -= 10;
+        }
+
+        imshow("image", dst);
+    }
+}
+
+// 트랙바를 움직일 때 실행되는 함수 (지금은 mode 변수값만 자동으로 바꿔줘요)
+void on_trackbar(int pos, void* userdata) {
+    // pos에 현재 트랙바 위치(0 또는 1)가 들어옵니다.
+    mode = pos;
+    cout << "현재 모드: " << (mode == 0 ? "밝기 증가 (+10)" : "밝기 감소 (-10)") << endl;
+}
+
+int main() {
+    src = imread("lenna.bmp", IMREAD_GRAYSCALE);
+
+    if (src.empty()) {
+        cerr << "이미지를 찾을 수 없습니다!" << endl;
+        return -1;
+    }
+
+    dst = src.clone();
+    namedWindow("image");
+
+    // 1. 트랙바 만들기 (이름, 창이름, 연결할 변수 주소, 최대값, 콜백함수)
+    // "Mode"라는 이름으로 0~1까지 움직이는 트랙바를 만들어요.
+    createTrackbar("Mode", "image", &mode, 1, on_trackbar);
+
+    // 2. 마우스 콜백 설정
+    setMouseCallback("image", on_mouse);
+
+    imshow("image", dst);
+
+    // 'q'를 누르면 종료
+    while (true) {
+        if (waitKey(0) == 'q') break;
+    }
+
+    return 0;
+}
